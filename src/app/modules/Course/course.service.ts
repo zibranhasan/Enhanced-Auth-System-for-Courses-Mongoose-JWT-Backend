@@ -1,14 +1,44 @@
-import { FilterQuery, SortOrder } from "mongoose";
+import { FilterQuery, SortOrder, Document } from "mongoose";
 import { TCourse } from "./course.interface";
 import { CourseModel } from "./course.model";
 import httpStatus from "http-status";
 import AppError from "../../errors/AppError";
 import ReviewModel from "../Review/review.model";
 
-const CreateCourseIntoDB = async (payload: TCourse) => {
-  const result = await CourseModel.create(payload);
-  return result;
+const CreateCourseIntoDB = async (payload: TCourse): Promise<TCourse> => {
+  // Assuming admin user ID is available in the request after authentication
+  const adminUserId = payload.createdBy || null;
+
+  // Explicitly set createdBy, createdAt, and updatedAt fields
+  const currentDate = new Date();
+  const courseData = {
+    ...payload,
+    createdBy: adminUserId,
+    createdAt: currentDate,
+    updatedAt: currentDate, // Set updatedAt to the same value as createdAt initially
+  };
+
+  const result = await CourseModel.create(courseData);
+
+  // Convert to plain JavaScript object before returning
+  const resultObject = result.toObject();
+
+  // Convert createdAt and updatedAt to Date objects
+  const createdAt = resultObject.createdAt
+    ? new Date(resultObject.createdAt)
+    : null;
+  const updatedAt = resultObject.updatedAt
+    ? new Date(resultObject.updatedAt)
+    : null;
+
+  return {
+    ...resultObject,
+    createdBy: adminUserId,
+    createdAt,
+    updatedAt,
+  };
 };
+
 const getCoursesFromDB = async (
   filter: FilterQuery<TCourse>,
   sortBy: string,
@@ -19,15 +49,30 @@ const getCoursesFromDB = async (
   const totalCount = await CourseModel.countDocuments(filter);
   const totalPages = Math.ceil(totalCount / limit);
 
-  const sortOptions: Record<string, SortOrder> = {};
-  sortOptions[sortBy] = sortOrder as SortOrder;
+  const sortOptions: { [key: string]: "asc" | "desc" } = {};
+  sortOptions[sortBy] = sortOrder as "asc" | "desc";
 
   const courses = await CourseModel.find(filter)
     .sort(sortOptions)
     .skip((page - 1) * limit)
-    .limit(limit);
+    .limit(limit)
+    .populate({
+      path: "createdBy",
+      select: "_id username email role",
+    })
+    .lean();
 
-  return { totalCount, totalPages, courses };
+  const transformedCourses: any[] = courses.map((course: any) => {
+    const createdBy = course.createdBy || null;
+
+    const transformedCourse: any = {
+      ...course,
+      createdBy,
+    };
+
+    return transformedCourse;
+  });
+  return { totalCount, totalPages, courses: transformedCourses };
 };
 
 const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {

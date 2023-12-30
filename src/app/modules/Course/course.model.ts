@@ -1,4 +1,4 @@
-import { Schema, Types, model } from "mongoose";
+import { Schema, model } from "mongoose";
 import { TCourse, TCourseDetails, Tag } from "./course.interface";
 
 const tagSchema = new Schema<Tag>({
@@ -27,6 +27,9 @@ export const courseSchema = new Schema<TCourse>({
   provider: { type: String, required: true },
   durationInWeeks: { type: Number, required: true },
   details: { type: courseDetailsSchema, required: true },
+  createdBy: { type: Schema.Types.ObjectId, ref: "User" },
+  createdAt: { type: Date },
+  updatedAt: { type: Date },
 });
 
 export const CourseModel = model<TCourse>("course", courseSchema);

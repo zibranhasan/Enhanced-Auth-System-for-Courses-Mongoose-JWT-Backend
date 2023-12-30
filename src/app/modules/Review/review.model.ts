@@ -5,7 +5,7 @@ const reviewSchema = new Schema<TReview>({
   courseId: {
     type: Schema.Types.ObjectId,
     required: true,
-    ref: "CourseModel",
+    ref: "course",
   },
   rating: {
     type: Number,
@@ -15,6 +15,12 @@ const reviewSchema = new Schema<TReview>({
     type: String,
     required: true,
   },
+  createdBy: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+  },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 const ReviewModel = model<TReview>("Review", reviewSchema);

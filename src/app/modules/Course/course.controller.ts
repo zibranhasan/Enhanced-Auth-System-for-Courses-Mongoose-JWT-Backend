@@ -4,6 +4,7 @@ import sendResponse from "../../utils/sendResponse";
 import { courseServices } from "./course.service";
 import { Request, Response } from "express";
 import { CourseModel } from "./course.model";
+import { TCourse } from "./course.interface";
 
 const createCourse = catchAsync(async (req, res) => {
   const { startDate, endDate, ...restCourseData } = req.body;
@@ -28,21 +29,41 @@ const createCourse = catchAsync(async (req, res) => {
     endDate
   );
 
+  const createdBy = req.user.userId;
   const payload = {
     ...restCourseData,
     startDate,
     endDate,
     durationInWeeks: calculatedDurationInWeeks,
+    createdBy,
   };
 
-  const result = await courseServices.CreateCourseIntoDB(payload);
+  const result: TCourse = await courseServices.CreateCourseIntoDB(payload);
 
-  sendResponse(res, {
+  const response = {
     statusCode: httpStatus.CREATED,
     success: true,
-    message: "Category created successfully",
-    data: result,
-  });
+    message: "Course created successfully",
+    data: {
+      _id: result._id,
+      title: result.title,
+      instructor: result.instructor,
+      categoryId: result.categoryId,
+      price: result.price,
+      tags: result.tags,
+      startDate: result.startDate,
+      endDate: result.endDate,
+      language: result.language,
+      provider: result.provider,
+      durationInWeeks: result.durationInWeeks,
+      details: result.details,
+      createdBy,
+      createdAt: result.createdAt?.toISOString(),
+      updatedAt: result.updatedAt?.toISOString(),
+    },
+  };
+
+  sendResponse(res, response);
 });
 
 interface CustomRequest extends Request {
@@ -96,29 +117,32 @@ const getCoursesByQuery = async (req: CustomRequest, res: Response) => {
     if (durationInWeeks) filter.durationInWeeks = durationInWeeks;
     if (level) filter["details.level"] = level;
 
-    const { totalCount, courses } = await courseServices.getCoursesFromDB(
-      filter,
-      sortBy,
-      sortOrder,
-      parseInt(page, 10),
-      parseInt(req.query.limit || "10", 10)
-    );
+    const { totalCount, totalPages, courses } =
+      await courseServices.getCoursesFromDB(
+        filter,
+        sortBy,
+        sortOrder,
+        parseInt(page, 10),
+        parseInt(req.query.limit || "10", 10)
+      );
 
     res?.status(httpStatus.OK).json({
       success: true,
-      statusCode: httpStatus.OK, // Use httpStatus.OK instead of 200
+      statusCode: httpStatus.OK,
       message: "Courses retrieved successfully",
       meta: {
         page: parseInt(page, 10),
         limit: parseInt(req.query.limit || "10", 10),
         total: totalCount,
       },
-      data: courses,
+      data: {
+        courses,
+      },
     });
   } catch (error: any) {
     res?.status(httpStatus.INTERNAL_SERVER_ERROR).json({
       success: false,
-      statusCode: httpStatus.INTERNAL_SERVER_ERROR, // Use httpStatus.INTERNAL_SERVER_ERROR instead of 500
+      statusCode: httpStatus.INTERNAL_SERVER_ERROR,
       message: "Internal Server Error",
       error: error.message,
     });
@@ -181,30 +205,3 @@ export const courseController = {
   getCoursesByIdWithReviews,
   getBestCourseController,
 };
-
-// //onst getBestCourseController = async (
-//   req: Request,
-//   res: Response
-// ) => {
-//   try {
-//     const result = await getBestCourse();
-
-//     return res.status(200).json({
-//       success: true,
-//       statusCode: 200,
-//       message: "Best course retrieved successfully",
-//       data: {
-//         course: result.course,
-//         averageRating: result.averageRating,
-//         reviewCount: result.reviewCount,
-//       },
-//     });
-//   } catch (error) {
-//     return res.status(500).json({
-//       success: false,
-//       statusCode: 500,
-//       message: "Internal Server Error",
-//       error: error.message,
-//     });
-//   }
-// };

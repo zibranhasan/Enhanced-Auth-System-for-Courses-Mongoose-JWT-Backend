@@ -1,4 +1,4 @@
-import { Types } from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 export type Tag = {
   name: string;
@@ -11,6 +11,7 @@ export type TCourseDetails = {
 };
 
 export type TCourse = {
+  _id: mongoose.Types.ObjectId;
   title: string;
   instructor: string;
   categoryId: Types.ObjectId;
@@ -22,4 +23,7 @@ export type TCourse = {
   provider: string;
   durationInWeeks: number;
   details: TCourseDetails;
+  createdBy?: Types.ObjectId | null; // Update the type to allow null
+  createdAt?: Date | null; // Update the type to allow null
+  updatedAt?: Date | null; // Update the type to allow null
 };

@@ -7,6 +7,8 @@ import globalErrorHandler from "./app/middlewares/globalErrorHandler";
 import { CourseRoutes } from "./app/modules/Course/course.route";
 import { CategoryRoutes } from "./app/modules/Category/category.route";
 import { ReviewRoutes } from "./app/modules/Review/review.route";
+import { UserRoutes } from "./app/modules/User/user.route";
+import { AuthRoutes } from "./app/modules/Auth/auth.route";
 // import globalErrorHandler from "./app/middlewares/globalErrorhandler";
 // import notFound from "./app/middlewares/notFound";
 // import router from "./app/routes";
@@ -22,6 +24,8 @@ app.get("/", (req, res) => {
 });
 
 //application routes
+app.use("/api/auth", UserRoutes);
+app.use("/api/auth", AuthRoutes);
 app.use("/api", CourseRoutes);
 app.use("/api", CategoryRoutes);
 app.use("/api", ReviewRoutes);
