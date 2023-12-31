@@ -17,6 +17,7 @@ router.post(
 router.get("/courses", courseController.getCoursesByQuery);
 router.put(
   "/courses/:courseId",
+  auth(USER_ROLE.admin),
   validateRequest(courseValidation.courseUpdateValidationSchema),
   courseController.updateCourse
 );
