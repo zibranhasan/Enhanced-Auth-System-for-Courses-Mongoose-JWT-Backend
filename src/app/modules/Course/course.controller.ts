@@ -163,8 +163,9 @@ const updateCourse = catchAsync(async (req, res) => {
 
 const getCoursesByIdWithReviews = catchAsync(async (req, res) => {
   const { courseId } = req.params;
-  const course = await CourseModel.findById(courseId);
-  if (!course) {
+  const result = await courseServices.getCoursesByIdWithReviewsFromDB(courseId);
+
+  if (!result) {
     return res.status(404).json({
       success: false,
       statusCode: 404,
@@ -172,15 +173,11 @@ const getCoursesByIdWithReviews = catchAsync(async (req, res) => {
     });
   }
 
-  const reviews = await courseServices.getCoursesByIdWithReviewsFromDB(
-    courseId
-  );
-
   sendResponse(res, {
     statusCode: httpStatus.OK,
     success: true,
-    message: "Course and Reviews retrieved successfully",
-    data: { course, reviews },
+    message: "Course with reviews retrieved successfully",
+    data: result,
   });
 });
 

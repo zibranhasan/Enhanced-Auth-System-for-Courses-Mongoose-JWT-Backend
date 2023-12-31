@@ -10,6 +10,7 @@ import { createToken } from "./auth.utils";
 import bcrypt from "bcrypt";
 import config from "../../config";
 import { TUser } from "../User/user.interface";
+import { Types } from "mongoose";
 
 const loginUser = async (username: string, password: string) => {
   // Checking if the user exists
@@ -26,10 +27,21 @@ const loginUser = async (username: string, password: string) => {
     throw new AppError(httpStatus.UNAUTHORIZED, "Incorrect password");
   }
 
-  // Create token and send it to the client
-  const jwtPayload = {
+  // // Create token and send it to the client
+  // const jwtPayload = {
+  //   _id: user._id,
+  //   role: user.role,
+  //   email: user.email,
+  // };
+
+  // Change the type of jwtPayload to explicitly include "user" | "admin" for the role property
+  const jwtPayload: {
+    _id: Types.ObjectId;
+    role: "user" | "admin"; // Ensure it is explicitly typed
+    email: string;
+  } = {
     _id: user._id,
-    role: user.role,
+    role: user.role as "user" | "admin", // Type assertion to ensure compatibility
     email: user.email,
   };
 

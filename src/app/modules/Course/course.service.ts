@@ -99,7 +99,12 @@ const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
         new: true,
         runValidators: true,
       }
-    );
+    )
+      .populate({
+        path: "createdBy",
+        select: "_id username email role",
+      })
+      .lean();
 
     if (!updatedCourse) {
       throw new AppError(httpStatus.BAD_REQUEST, "Failed to update course");
@@ -138,16 +143,56 @@ const updateCourseIntoDB = async (id: string, payload: Partial<TCourse>) => {
         }
       );
     }
+    // Format the response
+    const formattedResponse = {
+      success: true,
+      statusCode: httpStatus.OK,
+      message: "Course updated successfully",
+      data: {
+        _id: updatedCourse._id,
+        title: updatedCourse.title,
+        instructor: updatedCourse.instructor,
+        categoryId: updatedCourse.categoryId,
+        price: updatedCourse.price,
+        tags: updatedCourse.tags,
+        startDate: updatedCourse.startDate,
+        endDate: updatedCourse.endDate,
+        language: updatedCourse.language,
+        provider: updatedCourse.provider,
+        durationInWeeks: updatedCourse.durationInWeeks,
+        details: updatedCourse.details,
+        createdBy: updatedCourse.createdBy,
+        createdAt: updatedCourse.createdAt,
+        updatedAt: updatedCourse.updatedAt,
+      },
+    };
 
-    return updatedCourse;
+    return formattedResponse;
   } catch (err) {
     throw new AppError(httpStatus.BAD_REQUEST, "Failed to update course");
   }
 };
 
 const getCoursesByIdWithReviewsFromDB = async (courseId: string) => {
-  const reviews = await ReviewModel.find({ courseId });
-  return reviews;
+  const course = await CourseModel.findById(courseId)
+    .populate({
+      path: "createdBy",
+      select: "_id username email role",
+    })
+    .lean();
+
+  if (!course) {
+    return null; // Or handle the case where the course is not found
+  }
+
+  const reviews = await ReviewModel.find({ courseId })
+    .populate({
+      path: "createdBy",
+      select: "_id username email role",
+    })
+    .lean();
+
+  return { course, reviews };
 };
 
 const getBestCourseFromDB = async () => {
@@ -172,6 +217,20 @@ const getBestCourseFromDB = async () => {
         },
       },
       {
+        $lookup: {
+          from: "users",
+          localField: "createdBy",
+          foreignField: "_id",
+          as: "createdBy",
+        },
+      },
+      {
+        $unwind: {
+          path: "$createdBy",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+      {
         $project: {
           _id: 1,
           title: 1,
@@ -186,6 +245,14 @@ const getBestCourseFromDB = async () => {
           details: 1,
           averageRating: 1,
           reviewCount: 1,
+          createdBy: {
+            _id: 1,
+            username: 1,
+            email: 1,
+            role: 1,
+          },
+          createdAt: 1,
+          updatedAt: 1,
           tags: {
             $filter: {
               input: "$tags",
