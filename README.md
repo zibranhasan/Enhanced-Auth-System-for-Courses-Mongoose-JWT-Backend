@@ -73,3 +73,14 @@ To run the project locally:
 ## Query Options for Courses
 
 - Implement filtering and pagination for retrieving courses based on various parameters (e.g., price range, start date, tags).
+- User Login:
+
+Username: zibran hasan sourav
+
+Password: Passw0Rd
+
+Admin Login:
+
+Username: zibran hasan
+
+Password:Passw0rd
