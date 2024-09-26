@@ -19,9 +19,9 @@ const app: Application = express();
 app.use(express.json());
 app.use(cors());
 
-// app.get("/", (req, res) => {
-//   res.send("Hello World!");
-// });
+app.get("/", (req, res) => {
+  res.send("Hello World!");
+});
 
 //application routes
 app.use("/api/auth", UserRoutes);

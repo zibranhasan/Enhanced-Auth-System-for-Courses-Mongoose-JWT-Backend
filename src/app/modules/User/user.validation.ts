@@ -10,7 +10,7 @@ const userValidationSchema = z.object({
       message:
         "Password must be at least 8 characters and include at least one uppercase letter, one lowercase letter, and one digit.",
     }),
-    role: z.enum(["user", "admin"]),
+    role: z.enum(["user", "admin"]).default("user"),
   }),
 });
 
